@@ -1,3 +1,4 @@
+//Categorías del filtro
 const nombres = {
     date: "Fecha",
     eci: "Evolucion de la contratacion Indefinido",
@@ -12,14 +13,17 @@ const nombres = {
     rfd: "Robos con fuerza en domicilios",
     hrcs: "Homicidios registrados por los cuerpos de seguridad",
     itd: "Infracciones por tráfico de drogas",
-    rvi: "Robos con violencia e intimidación",
-    mp: "Mujeres en paro",
-    hp: "Hombres en paro"
+    rvi: "Robos con violencia e intimidación"
 };
 
+//Definiendo variables y constantes
 var data = [];
+var activas = [];
 var colores = {};
 
+var bandera = 0;
+
+//Códigos asignados a las etiquetas del dataset
 var indices = [
     'eci',
     'ect',
@@ -36,9 +40,7 @@ var indices = [
     'rvi',
 ];
 
-var activas = [];
-
-// set the dimensions and margins of the graph
+// Definiendo las dimensiones del primer grafico
 const margin = {
     top: 10, right: 30, bottom: 30, left: 60
 },
@@ -46,7 +48,7 @@ const margin = {
     height = 300 - margin.top - margin.bottom;
 
 
-// append the svg object to the body of the page
+// Inciando el objeto svg
 const svg = d3.select("#lineas")
     .append("svg")
     .attr("width", width + margin.left + margin.right)
@@ -61,25 +63,27 @@ const tooltip = d3.select('.tooltip-area')
     .style("visibility", "hidden");
 	
 	
-// set the dimensions and margins of the graph
+// Definiendo las dimensiones del grafico de pastel
 var widthP = 300
     heightP = 300
     marginP = 30
 	
-// append the svg object to the div called 'my_dataviz'
+// Iniciando el objeto svg del segundo grafico
 var svgP = d3.select("#pieChart")
             .append("svg")
             .attr("width", widthP)
             .attr("height", heightP)
             .append("g")
-            .attr("transform", "translate(" + widthP / 2 + "," + heightP / 2 + ")")
-			
+            .attr("transform", "translate(" + widthP / 2 + "," + heightP / 2 + ")");
+
+// Definiendo las dimensiones del grafico de barras		
 const marginB = {
     top: 10, right: 30, bottom: 30, left: 60
 },
     widthB = 650 - margin.left - margin.right,
     heightB = 300 - margin.top - margin.bottom;
 
+//Inciando el objeto svg del tercer grafico
 var svgB = d3.select("#barChart")
             .append("svg")
             .attr("width", widthB + margin.left + margin.right)
@@ -87,6 +91,7 @@ var svgB = d3.select("#barChart")
             .append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
+//Función auxiliar para encontrar el máximo
 function maximo() {
     let _maximo = -Infinity;
     activas.forEach(element => {
@@ -99,7 +104,7 @@ function maximo() {
     return _maximo;
 }
 
-
+//Función auxiliar para eliminar los elementos null
 function elimninarNaN(element) {
     let newData = [];
     data.forEach(d => {
@@ -111,8 +116,6 @@ function elimninarNaN(element) {
 }
 
 
-
-// http://bl.ocks.org/fryford/2925ecf70ac9d9b51031
 function animateline(element) {
     // Get the length of each line in turn
     var totalLength = d3.select("#line" + element).node().getTotalLength();
@@ -128,7 +131,7 @@ function animateline(element) {
         .style("stroke-width", 3);
 }
 
-
+//Función principal para pintar
 function render(element) {
     svg.selectAll("*").remove();
 
@@ -139,12 +142,12 @@ function render(element) {
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    // Add X axis --> it is a date format
+    // Adicionando el eje X
     const x = d3.scaleTime()
         .domain(d3.extent(data, function (d) { return d.date; }))
         .range([0, width]);
 
-    // Add Y axis
+    // Adicionando el eje Y
     const y = d3.scaleLinear()
         .domain([0, maximo()])
         .range([height, 0]);
@@ -167,7 +170,7 @@ function render(element) {
         tooltip.style("visibility", "hidden");
     }
 
-
+	//Definición del evento para el tooltip y la actualización del gráfico de pastel
     const _mousemove = (event, d, element) => {
         let [xx, yy] = d3.pointer(event);
         tooltip.style("top", (event.pageY - 10) + "px")
@@ -185,6 +188,7 @@ function render(element) {
 		var anioE = moment(x.invert(xx)).format('YYYY');
 		
 		console.log("Año Event " + anioE);
+		bandera++;
 		graficas2(anioE);
     };
 
@@ -210,7 +214,7 @@ function render(element) {
     });
 }
 
-
+//Actualización de los elementos seleccionados en el filtro y llamado a las funciones para pintar
 function intercambiar(elemento) {
     let index = activas.indexOf(elemento)
     if (index == -1) {
@@ -219,12 +223,16 @@ function intercambiar(elemento) {
         activas.splice(index, 1)
     }
     render();
-	//graficas2();
+	if(bandera == 0){
+		graficas2(2014);
+	}
 }
 
+//Función encargada de pintar el segundo (Pastel) y tercer (Barras) gráfico
 function graficas2(anioEvent){
 	svgP.selectAll("*").remove();
 	svgB.selectAll("*").remove();
+	
 	mujeres = 0.0;
     hombres = 0.0;
     cont = 0;
@@ -239,7 +247,7 @@ function graficas2(anioEvent){
 		}
     })
 	
-	console.log("Final" + " - " + mujeres + " - " + hombres);
+console.log("Final" + " - " + mujeres + " - " + hombres);
 
 // The radius of the pieplot is half the width or half the height (smallest one). I subtract a bit of margin.
 var radius = Math.min(widthP, heightP) / 2 - marginP
